@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Coach AI</title>
+<style>
+:root{
+  --bg0:#ffffff;--bg1:#f4f4f4;--bg2:#ebebeb;--bg3:#e0e0e0;--bg4:#cccccc;
+  --t0:#111111;--t1:#555555;--t2:#999999;
+  --bd:#dddddd;--bd2:#eeeeee;
+  --blue:#2a65d4;--bluebg:#e8f0fd;--bluebd:#b3caf5;
+  --org:#c45e15;--orgbg:#fdf0e6;--orgbd:#f0c090;
+  --grn:#2a8c3a;--grnbg:#e8f5eb;--grnbd:#a0d8ac;
+  --red:#c03030;--redbg:#fde8e8;--redbd:#f0a0a0;
+  --pur:#6b50d0;--purbg:#f0ecfd;--purbd:#c0aef5;
+  --yel:#9a6e00;--yelbg:#fdf8e6;--yelbd:#e8d080;
+  --r:4px;--mono:Consolas,'Courier New',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg0);color:var(--t0);font-family:var(--mono);font-size:12px;line-height:1.6;min-height:100vh}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg1)}::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px}
+#topbar{position:sticky;top:0;z-index:200;background:var(--bg1);border-bottom:1px solid var(--bd);padding:0 14px;height:40px;display:flex;align-items:center;gap:10px}
+.logo{font-size:13px;font-weight:700;letter-spacing:.08em;flex-shrink:0}
+.logo em{color:var(--blue);font-style:normal}
+#phase-pill{font-size:9px;color:var(--t2);letter-spacing:.06em}
+.tabs{display:flex;gap:2px;margin-left:auto}
+.tab-btn{background:none;border:none;font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:.06em;padding:4px 9px;border-radius:3px;cursor:pointer;transition:all .1s}
+.tab-btn:hover{color:var(--t1);background:var(--bg2)}
+.tab-btn.on{color:var(--blue);background:var(--bluebg);border:1px solid var(--bluebd)}
+.main{max-width:860px;margin:0 auto;padding:16px 13px 60px}
+.sec{display:none}.sec.on{display:block}
+.wk-nav{display:flex;align-items:center;gap:7px;margin-bottom:10px}
+.nav-btn{background:var(--bg2);border:1px solid var(--bd);color:var(--t1);font-family:var(--mono);font-size:12px;padding:5px 11px;border-radius:3px;cursor:pointer;flex-shrink:0;transition:all .1s}
+.nav-btn:hover{background:var(--bg3);color:var(--t0)}
+.wk-info{flex:1;background:var(--bg1);border:1px solid var(--bd);border-radius:var(--r);padding:8px 12px;display:flex;align-items:center;justify-content:space-between}
+.wk-lbl{font-size:13px;font-weight:700;margin-bottom:2px}
+.wk-dates{font-size:10px;color:var(--t2)}
+.ph-badge{font-size:9px;padding:2px 8px;border-radius:3px;letter-spacing:.07em;font-weight:700;flex-shrink:0}
+.ph-strip{background:var(--bg1);border:1px solid var(--bd);border-radius:var(--r);padding:8px 11px;margin-bottom:9px;font-size:11px;color:var(--t1);line-height:1.6}
+.ph-strip strong{color:var(--t0)}
+.day-sep{font-size:9px;font-weight:700;color:var(--t2);letter-spacing:.14em;text-transform:uppercase;display:flex;align-items:center;gap:8px;margin:10px 0 5px}
+.day-sep::after{content:'';flex:1;height:1px;background:var(--bd)}
+.sess{border:1px solid var(--bd);border-radius:var(--r);margin-bottom:4px;overflow:hidden}
+.sess-hd{display:flex;align-items:center;gap:7px;padding:8px 11px;background:var(--bg1);cursor:pointer;transition:background .1s}
+.sess-hd:hover{background:var(--bg2)}
+.sess-bd{padding:10px 13px;background:var(--bg2);border-top:1px solid var(--bd);font-size:11px;color:var(--t1);line-height:1.8}
+.badge{font-size:9px;font-weight:700;letter-spacing:.07em;padding:2px 7px;border-radius:3px;min-width:58px;text-align:center;flex-shrink:0}
+.b-boulder{background:var(--orgbg);color:var(--org);border:1px solid var(--orgbd)}
+.b-run{background:var(--bluebg);color:var(--blue);border:1px solid var(--bluebd)}
+.b-home{background:var(--grnbg);color:var(--grn);border:1px solid var(--grnbd)}
+.b-mtb{background:var(--purbg);color:var(--pur);border:1px solid var(--purbd)}
+.b-rest{background:var(--bg2);color:var(--t2);border:1px solid var(--bd)}
+.stitle{font-size:12px;flex:1}
+.grades{font-size:10px;color:var(--t2)}
+.dur{font-size:10px;color:var(--t2);flex-shrink:0}
+.arr{font-size:10px;color:var(--t2);flex-shrink:0}
+.ex-lbl{font-size:9px;color:var(--grn);letter-spacing:.1em;text-transform:uppercase;margin-top:7px;margin-bottom:2px}
+.ex-val{color:var(--grn)}
+.warn{margin-top:7px;padding:6px 9px;background:var(--redbg);border:1px solid var(--redbd);border-radius:3px;font-size:11px;color:var(--red)}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:9px}
+.mcard{background:var(--bg1);border:1px solid var(--bd);border-radius:var(--r);padding:9px 10px;text-align:center}
+.m-lbl{font-size:9px;color:var(--t2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+.m-val{font-size:17px;font-weight:700}
+.m-unit{font-size:10px;color:var(--t1);font-weight:400}
+.icard{background:var(--bg1);border:1px solid var(--bd);border-radius:var(--r);padding:10px 12px;margin-bottom:6px;font-size:11px;color:var(--t1);line-height:1.8}
+.ilbl{font-size:9px;color:var(--t2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.meal-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bd2)}
+.meal-row:last-child{border:none}
+.mpct{color:var(--blue);font-weight:700;min-width:26px;font-size:11px}
+.mkcal{color:var(--t2);margin-left:auto;font-size:10px}
+.tend-card{background:var(--yelbg);border:1px solid var(--yelbd);border-radius:var(--r);padding:12px 13px;margin-bottom:7px}
+.tend-lbl{font-size:9px;color:var(--yel);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px}
+.ftags{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+.ftag{font-size:10px;padding:3px 8px;border-radius:10px;background:var(--bg2);border:1px solid var(--bd);color:var(--t1)}
+
+.dtype-tabs{display:flex;gap:3px;margin:10px 0 8px;background:var(--bg1);border:1px solid var(--bd);border-radius:var(--r);padding:4px}
+.dtype-btn{flex:1;background:none;border:none;font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:.06em;padding:5px 4px;border-radius:3px;cursor:pointer;transition:all .1s;text-align:center}
+.dtype-btn:hover{color:var(--t1);background:var(--bg2)}
+.dtype-btn.on{color:var(--blue);background:var(--bluebg);border:1px solid var(--bluebd);font-weight:700}
+.dtype-sec{display:none}.dtype-sec.on{display:block}
+.meal-block{margin-bottom:8px;border:1px solid var(--bd);border-radius:var(--r);overflow:hidden}
+.meal-hd{background:var(--bg1);padding:7px 11px;font-size:9px;font-weight:700;color:var(--t2);letter-spacing:.12em;text-transform:uppercase;border-bottom:1px solid var(--bd)}
+.meal-body{padding:9px 12px;background:var(--bg0);font-size:11px;color:var(--t1);line-height:1.7}
+.meal-opt{color:var(--t0);margin-bottom:1px}
+.meal-or{font-size:10px;color:var(--t2);margin:3px 0;font-style:italic}
+.timing-warn{background:var(--orgbg);border:1px solid var(--orgbd);border-radius:3px;padding:7px 10px;margin-bottom:9px;font-size:11px;color:var(--org);line-height:1.6}
+.timing-info{background:var(--bluebg);border:1px solid var(--bluebd);border-radius:3px;padding:7px 10px;margin-bottom:9px;font-size:11px;color:var(--blue);line-height:1.6}
+.spesa-btn{width:100%;margin-top:10px;background:var(--grnbg);border:1px solid var(--grnbd);color:var(--grn);font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;padding:10px;border-radius:var(--r);cursor:pointer;transition:all .15s}
+.spesa-btn:hover{background:var(--grn);color:#fff}
+.spesa-feedback{font-size:10px;color:var(--grn);text-align:center;margin-top:5px;min-height:16px}
+
+.cal-btn{background:none;border:1px solid var(--bd);color:var(--t2);font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:3px;cursor:pointer;flex-shrink:0;transition:all .1s;margin-left:4px}
+.cal-btn:hover{background:var(--bluebg);color:var(--blue);border-color:var(--bluebd)}
+.cal-panel{margin-top:9px;padding:10px 11px;background:var(--bg1);border:1px solid var(--bluebd);border-radius:var(--r)}
+.cal-panel-lbl{font-size:9px;color:var(--blue);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px;font-weight:700}
+.cal-row{display:flex;gap:8px;align-items:center;margin-bottom:7px;font-size:11px;color:var(--t1)}
+.cal-row label{min-width:36px;color:var(--t2);font-size:10px}
+.cal-row input{background:var(--bg0);border:1px solid var(--bd);color:var(--t0);font-family:var(--mono);font-size:11px;padding:4px 7px;border-radius:3px;flex:1}
+.cal-confirm{background:var(--bluebg);border:1px solid var(--bluebd);color:var(--blue);font-family:var(--mono);font-size:10px;font-weight:700;padding:6px 14px;border-radius:3px;cursor:pointer;width:100%;letter-spacing:.06em;transition:all .1s}
+.cal-confirm:hover{background:var(--blue);color:#fff}
+</style>
+</head>
+<body>
+<div id="topbar">
+  <div class="logo">COACH<em>AI</em></div>
+  <div id="phase-pill"></div>
+  <div class="tabs">
+    <button class="tab-btn on" onclick="setTab('programma',this)">SETTIMANA</button>
+    <button class="tab-btn" onclick="setTab('nutri',this)">NUTRI</button>
+    <button class="tab-btn" onclick="setTab('tendini',this)">TENDINI</button>
+  </div>
+</div>
+<div class="main">
+  <div class="sec on" id="sec-programma">
+    <div class="wk-nav">
+      <button class="nav-btn" onclick="chWk(-1)">◀</button>
+      <div class="wk-info">
+        <div><div class="wk-lbl" id="wk-lbl"></div><div class="wk-dates" id="wk-dates"></div></div>
+        <div id="ph-badge" class="ph-badge"></div>
+      </div>
+      <button class="nav-btn" onclick="chWk(1)">▶</button>
+    </div>
+    <div class="ph-strip" id="ph-strip"></div>
+    <div id="sessions"></div>
+  </div>
+  <div class="sec" id="sec-nutri"></div>
+  <div class="sec" id="sec-tendini"></div>
+</div>
+<script>
+const H0='Scapular pull 3×10 → barra · Negative chin-up 3×5 → barra · Band external rotation 3×15 → elastico libero · Band reverse wrist curl 3×15 → elastico libero · Band lateral raise 3×12 → elastico libero (piedi sull\'elastico) · Push-up largo 3×12 → bodyweight (petto) · Push-up stretto 3×8 → bodyweight (petto interno + tricipite) · Plank 3×45" → bodyweight';
+const A1='Push-up 3×10 · Face pull 3×15 · Reverse wrist curl 3×15 · Plank 3×45"';
+const A2=A1+' · Dead hang 3×10"';
+const A3=A2+' · Negative pull-up 3×4 (4–5" discesa)';
+const A4=A2+' · Negative pull-up 3×5';
+const A5='Push-up 3×10 · Face pull 3×15 · Dead hang 3×10" · Negative pull-up 3×5';
+const A6='Push-up 3×10 · Face pull 3×15 · Dead hang 3×10" · Pull-up 3×max';
+
+const WK=[
+{wk:1,ph:1,pn:'Adattamento',lbl:'W1',d:'11–17 mag',note:'Tecnica pura. Adattamento tendini. Regola 48–72h tra sessioni boulder.',
+ groups:[
+  {label:'SESSIONI BOULDER',s:[
+    {t:'boulder',title:'Boulder #1',dur:'60min',g:'V1–V3',desc:'Crimps indoor più aggressivi degli scogli. Non insistere su problemi che non vengono.',ex:A1,w:'Dolore acuto alle dita = stop immediato.'},
+    {t:'boulder',title:'Boulder #2',dur:'60min',g:'V1–V3',desc:'Se le dita sono affaticate, abbassa il volume.',ex:A1}]},
+  {label:'SESSIONI CORSA',s:[
+    {t:'run',title:'Corsa #1',dur:'~21min',desc:"1' corsa / 2' cammino × 7. Ritmo da conversazione — frasi complete."},
+    {t:'run',title:'Corsa #2',dur:'~21min',desc:"1' corsa / 2' cammino × 7."}]},
+  {label:'HOME DAY',s:[
+    {t:'home',title:'Home Workout',dur:'~20min',ex:H0}]}
+ ]},
+{wk:2,ph:1,pn:'Adattamento',lbl:'W2',d:'18–24 mag',note:'1× boulder questa settimana (cal. W21). Dead hang da questa settimana.',
+ groups:[
+  {label:'SESSIONE BOULDER',s:[
+    {t:'boulder',title:'Boulder #1',dur:'90min',g:'V2–V4',desc:'Puoi esplorare V4 ma non insistere oltre 4–5 tentativi per problema.',ex:A2}]},
+  {label:'SESSIONI CORSA',s:[
+    {t:'run',title:'Corsa #1',dur:'~21min',desc:"1' corsa / 2' cammino × 7."},
+    {t:'run',title:'Corsa #2',dur:'~21min',desc:"1' corsa / 2' cammino × 7."}]},
+  {label:'HOME DAY',s:[
+    {t:'home',title:'Home Workout',dur:'~20min',ex:H0}]}
+ ]},
+{wk:3,ph:1,pn:'Adattamento',lbl:'W3',d:'25–31 mag',note:'1× boulder questa settimana (cal. W22). Prima volta corsa > recupero. Negative pull-up da questa settimana.',
+ groups:[
+  {label:'SESSIONE BOULDER',s:[
+    {t:'boulder',title:'Boulder #1',dur:'90min',g:'V2–V4, prova V5',desc:'Max 3–4 tentativi per problema difficile. Prova V5 senza insistere.',ex:A3}]},
+  {label:'SESSIONI CORSA',s:[
+    {t:'run',title:'Corsa #1',dur:'~20min',desc:"1'30\" corsa / 1' cammino × 8. Il tempo di corsa supera il recupero per la prima volta."},
+    {t:'run',title:'Corsa #2',dur:'~20min',desc:"1'30\" / 1' × 8."}]},
+  {label:'HOME DAY',s:[
+    {t:'home',title:'Home Workout',dur:'~20min',ex:H0}]}
+ ]},
+{wk:4,ph:1,pn:'Adattamento',lbl:'W4',d:'1–5 giu',note:'Fine adattamento. Torna a 2× boulder. Focus qualità del movimento.',
+ groups:[
+  {label:'SESSIONI BOULDER',s:[
+    {t:'boulder',title:'Boulder #1',dur:'90–105min',g:'V3–V5',desc:'Fine fase adattamento. Focus qualità movimento.',ex:A4},
+    {t:'boulder',title:'Boulder #2',dur:'90–105min',g:'V3–V5',desc:'Chiudi la fase con solidità.',ex:A4}]},
+  {label:'SESSIONI CORSA',s:[
+    {t:'run',title:'Corsa #1',dur:'~20min',desc:"1'30\" / 1' × 8."},
+    {t:'run',title:'Corsa #2',dur:'~20min',desc:"1'30\" / 1' × 8."}]},
+  {label:'HOME DAY',s:[
+    {t:'home',title:'Home Workout',dur:'~20min',ex:H0}]}
+ ]},
+{wk:5,ph:2,pn:'Costruzione',lbl:'W5',d:'8–14 giu',note:'Sardegna. Niente boulder. Cardio su corsa e MTB con dislivello. Home workout saltato — recuperare rafforzamento polso destro in W6.',
+ groups:[
+  {label:'DOM 07 — VIAGGIO',s:[
+    {t:'rest',title:'Viaggio / Arrivo',dur:'—',desc:'Giornata di viaggio. Nessun allenamento.'}]},
+  {label:'LUN 08',s:[
+    {t:'run',title:'Corsa intervalli',dur:'~26min',desc:"2' corsa / 1' cammino × 8."}]},
+  {label:'MER 10',s:[
+    {t:'mtb',title:'MTB',dur:'variabile',desc:'Uscita breve con dislivello.'}]},
+  {label:'VEN 12',s:[
+    {t:'run',title:'Corsa intervalli',dur:'~26min',desc:"2' corsa / 1' cammino × 8."}]},
+  {label:'SAB 13',s:[
+    {t:'mtb',title:'MTB',dur:'variabile',desc:'Uscita più lunga.'}]}
+ ]},
+{wk:6,ph:2,pn:'Costruzione',lbl:'W6',d:'13–19 giu',note:'Consolida V4 prima di insistere su V5.',
+ groups:[
+  {label:'SESSIONI BOULDER',s:[
+    {t:'boulder',title:'Boulder #1',dur:'90min',g:'V3–V5',desc:'Focus su problemi tecnici, non forza bruta.',ex:A2},
+    {t:'boulder',title:'Boulder #2',dur:'90min',g:'V3–V5',desc:'Consolida i V4 prima di insistere sui V5.',ex:A2},
+    {t:'boulder',title:'Boulder #3',dur:'90min',g:'V2–V4',desc:'Volume. Tecnica piedi.',ex:'Face pull 3×15 · Reverse wrist curl 3×15 · Plank 3×45"'}]},
+  {label:'SESSIONI CORSA',s:[
+    {t:'run',title:'Intervalli',dur:'~26min',desc:"2' / 1' × 8."},
+    {t:'run',title:'Corsa continua',dur:'~33min',desc:"5km Z2."}]},
+  {label:'HOME DAY',s:[
+    {t:'home',title:'Home Workout',dur:'~20min',ex:H0}]}
+ ]},
+{wk:7,ph:2,pn:'Costruzione',lbl:'W7',d:'20–26 giu',note:'Negative pull-up in boulder da questa settimana.',
+ groups:[
+  {label:'SESSIONI BOULDER',s:[
+    {t:'boulder',title:'Boulder #1',dur:'90min',g:'V3–V5',ex:A3},
+    {t:'boulder',title:'Boulder #2',dur:'90min',g:'V3–V5',ex:A3},
+    {t:'boulder',title:'Boulder #3',dur:'90min',g:'V2–V4',desc:'Volume. Tecnica.',ex:'Face pull 3×15 · Reverse wrist curl 3×15 · Plank 3×45"'}]},
+  {label:'SESSIONI CORSA',s:[
+    {t:'run',title:'Intervalli',dur:'~26min',desc:"2' / 1' × 8."},
+    {t:'run',title:'Corsa continua',dur:'~33min',desc:"5km Z2."}]},
+  {label:'HOME DAY',s:[
+    {t:'home',title:'Home Workout',dur:'~20min',ex:H0}]}
+ ]},
+{wk:8,ph:2,pn:'Costruzione',lbl:'W8',d:'27 giu–3 lug',note:'Fine costruzione. Preparazione al volume 4x di luglio.',
+ groups:[
+  {label:'SESSIONI BOULDER',s:[
+    {t:'boulder',title:'Boulder #1',dur:'90min',g:'V3–V5',desc:'Fine costruzione. Consolida.',ex:A4},
+    {t:'boulder',title:'Boulder #2',dur:'90min',g:'V3–V5',ex:A4},
+    {t:'boulder',title:'Boulder #3',dur:'90min',g:'V3–V4',ex:'Face pull 3×15 · Reverse wrist curl 3×15 · Plank 3×45"'}]},
+  {label:'SESSIONI CORSA',s:[
+    {t:'run',title:'Intervalli',dur:'~26min',desc:"2' / 1' × 8."},
+    {t:'run',title:'Corsa continua',dur:'~38min',desc:"5–6km Z2. Ultima prima del blocco sviluppo."}]},
+  {label:'HOME DAY',s:[
+    {t:'home',title:'Home Workout',dur:'~20min',ex:H0}]}
+ ]},
+{wk:9,ph:3,pn:'Sviluppo',lbl:'W9',d:'4–10 lug',note:'4x boulder: 2 HARD + 2 tecnica/volume. Min 1 riposo obbligatorio.',
+ groups:[
+  {label:'SESSIONI BOULDER',s:[
+    {t:'boulder',title:'Boulder #1 HARD',dur:'90–105min',g:'V4–V6',desc:'Riposo completo tra tentativi (3–5min).',ex:A5},
+    {t:'boulder',title:'Boulder #2 HARD',dur:'90–105min',g:'V4–V6',desc:'Seconda hard. Ascolta le dita.',ex:'Push-up 3×10 · Face pull 3×15 · Dead hang 3×10"'},
+    {t:'boulder',title:'Boulder #3 Tecnica',dur:'90min',g:'V3–V5',desc:'Focus piedi, lettura problema.',ex:'Face pull 3×15 · Reverse wrist curl 3×15 · Plank 3×45"'},
+    {t:'boulder',title:'Boulder #4 Volume',dur:'90min',g:'V3–V4',desc:'Alto volume, bassa intensità. Niente oltre V4.',ex:'Face pull 3×15 · Plank 3×45"'}]},
+  {label:'SESSIONI CORSA',s:[
+    {t:'run',title:'Intervalli Z4-5',dur:'~28min',desc:"4 rep × 4' Z4-5. Recupero 3' camminando."},
+    {t:'run',title:'Corsa Z2',dur:'~42min',desc:"6km Z2. Lungo e lento."}]}
+ ]},
+{wk:10,ph:3,pn:'Sviluppo',lbl:'W10',d:'11–17 lug',note:'4x boulder. Z2 sale a 7km.',
+ groups:[
+  {label:'SESSIONI BOULDER',s:[
+    {t:'boulder',title:'Boulder #1 HARD',dur:'90–105min',g:'V4–V6',ex:A5},
+    {t:'boulder',title:'Boulder #2 HARD',dur:'90–105min',g:'V4–V6',desc:'Prova V6 se il corpo è fresco.',ex:'Push-up 3×10 · Face pull 3×15 · Dead hang 3×10"'},
+    {t:'boulder',title:'Boulder #3 Tecnica',dur:'90min',g:'V3–V5',ex:'Face pull 3×15 · Reverse wrist curl 3×15 · Plank 3×45"'},
+    {t:'boulder',title:'Boulder #4 Volume',dur:'90min',g:'V3–V4',ex:'Face pull 3×15 · Plank 3×45"'}]},
+  {label:'SESSIONI CORSA',s:[
+    {t:'run',title:'Intervalli Z4-5',dur:'~28min',desc:"4×4' Z4-5 / 3' recupero."},
+    {t:'run',title:'Corsa Z2',dur:'~48min',desc:"7km Z2."}]}
+ ]},
+{wk:11,ph:3,pn:'Sviluppo',lbl:'W11',d:'18–24 lug',note:'Peak week in arrivo. Carica bene.',
+ groups:[
+  {label:'SESSIONI BOULDER',s:[
+    {t:'boulder',title:'Boulder #1 HARD',dur:'90–105min',g:'V5–V6',ex:A5},
+    {t:'boulder',title:'Boulder #2 HARD',dur:'90–105min',g:'V5–V6',desc:'Massimo impegno.',ex:'Push-up 3×10 · Face pull 3×15 · Dead hang 3×10"'},
+    {t:'boulder',title:'Boulder #3 Tecnica',dur:'90min',g:'V3–V5',ex:'Face pull 3×15 · Reverse wrist curl 3×15 · Plank 3×45"'},
+    {t:'boulder',title:'Boulder #4 Volume',dur:'90min',g:'V3–V4',ex:'Face pull 3×15 · Plank 3×45"'}]},
+  {label:'SESSIONI CORSA',s:[
+    {t:'run',title:'Intervalli Z4-5',dur:'~30min',desc:"5 rep × 3' Z5 / 2' recupero."},
+    {t:'run',title:'Corsa Z2',dur:'~50min',desc:"7–8km Z2."}]}
+ ]},
+{wk:12,ph:3,pn:'Sviluppo',lbl:'W12',d:'25–31 lug',note:'Peak luglio. Fine blocco sviluppo.',
+ groups:[
+  {label:'SESSIONI BOULDER',s:[
+    {t:'boulder',title:'Boulder #1 HARD',dur:'90–105min',g:'V5–V6',ex:A5},
+    {t:'boulder',title:'Boulder #2 HARD',dur:'90–105min',g:'V5–V6',ex:'Push-up 3×10 · Face pull 3×15 · Dead hang 3×10"'},
+    {t:'boulder',title:'Boulder #3 Tecnica',dur:'90min',g:'V4–V5',ex:'Face pull 3×15 · Reverse wrist curl 3×15 · Plank 3×45"'},
+    {t:'boulder',title:'Boulder #4 Volume',dur:'90min',g:'V3–V4',ex:'Face pull 3×15 · Plank 3×45"'}]},
+  {label:'SESSIONI CORSA',s:[
+    {t:'run',title:'Intervalli Z4-5',dur:'~30min',desc:"Z4-5. Schema settimane precedenti."},
+    {t:'run',title:'Corsa Z2',dur:'~52min',desc:"8km Z2. Ultima lunga prima di agosto."}]}
+ ]},
+{wk:13,ph:4,pn:'Ferie',lbl:'W13',d:'1–7 ago',note:'Ferie. Non forzare. Libertà totale.',
+ groups:[
+  {label:'MOVIMENTO LIBERO',s:[
+    {t:'boulder',title:'Boulder (se disponibile)',dur:'var.',g:'V3–V4',desc:'Solo se palestra disponibile.'},
+    {t:'run',title:'Corsa / Camminata',dur:'var.',desc:'Non strutturato.'}]}
+ ]},
+{wk:14,ph:4,pn:'Ferie',lbl:'W14',d:'8–14 ago',note:'Ferie. Opportunistico.',
+ groups:[
+  {label:'MOVIMENTO LIBERO',s:[
+    {t:'boulder',title:'Boulder (se disponibile)',dur:'var.',g:'V3–V4',desc:'Opportunistico.'},
+    {t:'run',title:'Attività libera',dur:'var.',desc:'Mare, nuoto, passeggiate.'}]}
+ ]},
+{wk:15,ph:4,pn:'Ferie',lbl:'W15',d:'15–21 ago',note:'Ferie. Libertà totale.',
+ groups:[
+  {label:'MOVIMENTO LIBERO',s:[
+    {t:'boulder',title:'Boulder (se disponibile)',dur:'var.',g:'V3–V4',desc:'Opportunistico.'},
+    {t:'run',title:'Attività libera',dur:'var.',desc:'Libertà totale.'}]}
+ ]},
+{wk:16,ph:4,pn:'Ferie',lbl:'W16',d:'22–28 ago',note:'Riattivazione graduale. Preparazione settembre.',
+ groups:[
+  {label:'SESSIONI BOULDER',s:[
+    {t:'boulder',title:'Boulder #1',dur:'75min',g:'V3–V4',desc:'Riattivazione. Senza spingere.',ex:'Push-up 3×10 · Face pull 3×15 · Plank 3×45"'},
+    {t:'boulder',title:'Boulder #2',dur:'75min',g:'V3–V4',desc:'Tecnica. Preparati per settembre.',ex:'Push-up 3×10 · Face pull 3×15 · Plank 3×45"'}]},
+  {label:'SESSIONE CORSA',s:[
+    {t:'run',title:'Corsa',dur:'~32min',desc:"4–5km ritmo basso. Aspettati di essere più lento — è normale."}]}
+ ]},
+{wk:17,ph:5,pn:'Picco / Transizione',lbl:'W17',d:'1–7 set',note:'Peak performance. 10km Z2 OBBLIGATORI senza eccezioni.',
+ groups:[
+  {label:'SESSIONI BOULDER',s:[
+    {t:'boulder',title:'Boulder #1 HARD',dur:'90–120min',g:'V5–V7',desc:'Riposi completi tra tentativi.',ex:A6},
+    {t:'boulder',title:'Boulder #2 HARD',dur:'90–120min',g:'V5–V7',ex:'Push-up 3×10 · Face pull 3×15 · Dead hang 3×10"'},
+    {t:'boulder',title:'Boulder #3 Tecnica',dur:'90min',g:'V4–V5',ex:'Face pull 3×15 · Reverse wrist curl 3×15 · Plank 3×45"'},
+    {t:'boulder',title:'Boulder #4 Volume',dur:'90min',g:'V4–V5',ex:'Face pull 3×15 · Plank 3×45"'}]},
+  {label:'SESSIONE CORSA',s:[
+    {t:'run',title:'Corsa 10km Z2',dur:'~60min',desc:'Ritmo da conversazione — se non riesci a parlare rallenta.',w:'10km OBBLIGATORI. Se non esci a fare 10km, non esci.'}]}
+ ]},
+{wk:18,ph:5,pn:'Picco / Transizione',lbl:'W18',d:'8–14 set',note:'Peak. 10km Z2 OBBLIGATORI.',
+ groups:[
+  {label:'SESSIONI BOULDER',s:[
+    {t:'boulder',title:'Boulder #1 HARD',dur:'90–120min',g:'V5–V7',ex:A6},
+    {t:'boulder',title:'Boulder #2 HARD',dur:'90–120min',g:'V5–V7',desc:'Prova V7.',ex:'Push-up 3×10 · Face pull 3×15 · Dead hang 3×10"'},
+    {t:'boulder',title:'Boulder #3 Tecnica',dur:'90min',g:'V4–V5',ex:'Face pull 3×15 · Reverse wrist curl 3×15 · Plank 3×45"'},
+    {t:'boulder',title:'Boulder #4 Volume',dur:'90min',g:'V4–V5',ex:'Face pull 3×15 · Plank 3×45"'}]},
+  {label:'SESSIONE CORSA',s:[
+    {t:'run',title:'Corsa 10km Z2',dur:'~60min',desc:'10km Z2.',w:'10km OBBLIGATORI.'}]}
+ ]},
+{wk:19,ph:5,pn:'Picco / Transizione',lbl:'W19',d:'15–21 set',note:'Fine programma. → nuovo ciclo da dashboard.',
+ groups:[
+  {label:'SESSIONI BOULDER',s:[
+    {t:'boulder',title:'Boulder #1 HARD',dur:'90–120min',g:'V5–V7',desc:'Ultima settimana. Lascia tutto sul muro.',ex:A6},
+    {t:'boulder',title:'Boulder #2 HARD',dur:'90–120min',g:'V5–V7',ex:'Push-up 3×10 · Face pull 3×15 · Dead hang 3×10"'},
+    {t:'boulder',title:'Boulder #3 Tecnica',dur:'90min',g:'V4–V5',ex:'Face pull 3×15 · Reverse wrist curl 3×15 · Plank 3×45"'},
+    {t:'boulder',title:'Boulder #4 Volume',dur:'90min',g:'V4–V5',desc:'Fine ciclo.',ex:'Face pull 3×15 · Plank 3×45"'}]},
+  {label:'SESSIONE CORSA',s:[
+    {t:'run',title:'Corsa 10km Z2',dur:'~60min',desc:'10km. Fine del programma.',w:'10km OBBLIGATORI.'}]}
+ ]}
+];
+
+const PHC={
+  1:{bg:'#e8f0fd',bd:'#b3caf5',c:'#2a65d4',lb:'ADATTAMENTO'},
+  2:{bg:'#e8f5eb',bd:'#a0d8ac',c:'#2a8c3a',lb:'COSTRUZIONE'},
+  3:{bg:'#fdf0e6',bd:'#f0c090',c:'#c45e15',lb:'SVILUPPO'},
+  4:{bg:'#f0ecfd',bd:'#c0aef5',c:'#6b50d0',lb:'FERIE'},
+  5:{bg:'#fde8e8',bd:'#f0a0a0',c:'#c03030',lb:'PICCO'}
+};
+const START=new Date(2026,4,11);
+const WK_STARTS=[
+  new Date(2026,4,11),new Date(2026,4,18),new Date(2026,4,25),new Date(2026,5,1),
+  new Date(2026,5,8),new Date(2026,5,13),new Date(2026,5,20),new Date(2026,5,27),
+  new Date(2026,6,4),new Date(2026,6,11),new Date(2026,6,18),new Date(2026,6,25),
+  new Date(2026,7,1),new Date(2026,7,8),new Date(2026,7,15),new Date(2026,7,22),
+  new Date(2026,8,1),new Date(2026,8,8),new Date(2026,8,15)
+];
+var SESSION_DATA={};
+let cw=Math.max(1,Math.min(19,Math.floor((new Date()-START)/(7*864e5))+1));
+
+function render(){
+  const w=WK[cw-1],ph=PHC[w.ph];
+  document.getElementById('wk-lbl').textContent=w.lbl+' · '+w.pn;
+  document.getElementById('wk-dates').textContent=w.d;
+  const pb=document.getElementById('ph-badge');
+  pb.textContent=ph.lb;
+  pb.style.cssText=`background:${ph.bg};border:1px solid ${ph.bd};color:${ph.c};font-size:9px;padding:2px 8px;border-radius:3px;letter-spacing:.07em;font-weight:700`;
+  document.getElementById('phase-pill').textContent='FASE '+w.ph+' / 5  ·  W'+cw+' / 19';
+  document.getElementById('ph-strip').innerHTML='<strong>Obiettivo:</strong> '+w.note;
+  let h='',gi=0;
+  SESSION_DATA={};
+  const wkStart=WK_STARTS[cw-1];
+  w.groups.forEach(g=>{
+    h+=`<div class="day-sep">${g.label}</div>`;
+    g.s.forEach(s=>{
+      const id='s'+gi;
+      const defDate=new Date(wkStart);
+      if(s.t==='run') defDate.setDate(defDate.getDate()+1);
+      else if(s.t==='home') defDate.setDate(defDate.getDate()+3);
+      else if(s.t==='mtb') defDate.setDate(defDate.getDate()+2);
+      const dd=defDate.toISOString().split('T')[0];
+      SESSION_DATA[id]={title:s.title+' - '+w.lbl,desc:(s.desc||'')+(s.ex?' | '+s.ex:''),dur:s.dur,date:dd};
+      h+=`<div class="sess">
+        <div class="sess-hd" onclick="tog('${id}')">
+          <span class="badge b-${s.t}">${s.t.toUpperCase()}</span>
+          <span class="stitle">${s.title}</span>
+          ${s.g?`<span class="grades">${s.g}</span>`:''}
+          <span class="dur">${s.dur}</span>
+          <button class="cal-btn" onclick="event.stopPropagation();toggleCal('${id}')" title="Aggiungi al calendario">&#128197;</button>
+          <span class="arr" id="a${id}">▸</span>
+        </div>
+        <div class="sess-bd" id="b${id}" style="display:none">
+          ${s.desc?`<div>${s.desc}</div>`:''}
+          ${s.ex?`<div class="ex-lbl">ESERCIZI</div><div class="ex-val">${s.ex}</div>`:''}
+          ${s.w?`<div class="warn">⚠ ${s.w}</div>`:''}
+          <div class="cal-panel" id="cp${id}" style="display:none">
+            <div class="cal-panel-lbl">&#128197; Aggiungi al calendario</div>
+            <div class="cal-row"><label>Data</label><input type="date" id="cd${id}" value="${dd}"></div>
+            <div class="cal-row"><label>Ora</label><input type="time" id="ct${id}" value="19:00"></div>
+            <button class="cal-confirm" onclick="createICS('${id}')">Crea Evento</button>
+          </div>
+        </div>
+      </div>`;
+      gi++;
+    });
+  });
+  document.getElementById('sessions').innerHTML=h;
+}
+function tog(id){
+  const b=document.getElementById('b'+id),a=document.getElementById('a'+id);
+  const v=b.style.display==='none';
+  b.style.display=v?'block':'none';
+  a.textContent=v?'▾':'▸';
+}
+function toggleCal(id){
+  const p=document.getElementById('cp'+id);
+  const b=document.getElementById('b'+id);
+  if(b.style.display==='none'){b.style.display='block';document.getElementById('a'+id).textContent='▾';}
+  p.style.display=p.style.display==='none'?'block':'none';
+}
+function createICS(id){
+  var d=SESSION_DATA[id];
+  var dateVal=document.getElementById('cd'+id).value;
+  var timeVal=document.getElementById('ct'+id).value;
+  if(!dateVal||!timeVal)return;
+  var durStr=d.dur||'90min';
+  var durMatch=durStr.match(/[0-9]+/);
+  var mins=durMatch?parseInt(durMatch[0]):90;
+  var start=new Date(dateVal+'T'+timeVal);
+  var end=new Date(start.getTime()+mins*60000);
+  function pad(n){return String(n).padStart(2,'0');}
+  function fmtDt(dt){return dt.getFullYear()+''+pad(dt.getMonth()+1)+''+pad(dt.getDate())+'T'+pad(dt.getHours())+''+pad(dt.getMinutes())+'00';}
+  var desc=d.desc||'';
+  var ics='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//CoachAI//EN\r\nCALSCALE:GREGORIAN\r\nBEGIN:VEVENT\r\nDTSTART:'+fmtDt(start)+'\r\nDTEND:'+fmtDt(end)+'\r\nSUMMARY:'+d.title+'\r\nDESCRIPTION:'+desc+'\r\nEND:VEVENT\r\nEND:VCALENDAR';
+  var blob=new Blob([ics],{type:'text/calendar'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download=d.title.replace(/[^a-z0-9]/gi,'_')+'.ics';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+function chWk(d){if(cw+d>=1&&cw+d<=19){cw+=d;render();}}
+function setTab(t,el){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('sec-'+t).classList.add('on');
+  el.classList.add('on');
+}
+
+(function(){
+var h='';
+h+='<div class="g4">';
+h+='<div class="mcard"><div class="m-lbl">KCAL</div><div class="m-val">3323</div></div>';
+h+='<div class="mcard"><div class="m-lbl">PROTEINE</div><div class="m-val">162<span class="m-unit">g</span></div></div>';
+h+='<div class="mcard"><div class="m-lbl">CARBS</div><div class="m-val">415<span class="m-unit">g</span></div></div>';
+h+='<div class="mcard"><div class="m-lbl">GRASSI</div><div class="m-val">111<span class="m-unit">g</span></div></div>';
+h+='</div>';
+h+='<div class="icard" style="margin-bottom:4px">';
+h+='<div class="ilbl">SPLIT PASTI</div>';
+h+='<div class="meal-row"><span class="mpct">25%</span><span>Colazione</span><span class="mkcal">~831 kcal</span></div>';
+h+='<div class="meal-row"><span class="mpct">35%</span><span>Pranzo</span><span class="mkcal">~1163 kcal</span></div>';
+h+='<div class="meal-row"><span class="mpct">15%</span><span>Spuntino</span><span class="mkcal">~498 kcal</span></div>';
+h+='<div class="meal-row"><span class="mpct">25%</span><span>Cena</span><span class="mkcal">~831 kcal</span></div>';
+h+='</div>';
+h+='<div class="dtype-tabs">';
+h+='<button class="dtype-btn on" onclick="setDtype(\'boulder\',this)">BOULDER</button>';
+h+='<button class="dtype-btn" onclick="setDtype(\'corsa\',this)">CORSA</button>';
+h+='<button class="dtype-btn" onclick="setDtype(\'bici\',this)">BICI</button>';
+h+='<button class="dtype-btn" onclick="setDtype(\'riposo\',this)">RIPOSO</button>';
+h+='</div>';
+h+='<div class="dtype-sec on" id="dtype-boulder">';
+h+='<div class="timing-warn">\u26a0 Collagene 15g + vitamina C obbligatorio 45\u201360 min pre-sessione. Pasto pre almeno 90 min prima.</div>';
+h+='<div class="meal-block"><div class="meal-hd">COLAZIONE \u2014 25% \u00b7 ~831 kcal</div><div class="meal-body">';
+h+='<div class="meal-opt">A: Avena 80g + latte 200ml + banana 1 + noci 20g</div>';
+h+='<div class="meal-or">oppure</div>';
+h+='<div class="meal-opt">B: Uova 3 + pane integrale 60g + yogurt greco 150g</div>';
+h+='</div></div>';
+h+='<div class="meal-block"><div class="meal-hd">PRANZO \u2014 35% \u00b7 ~1163 kcal</div><div class="meal-body">';
+h+='<div class="meal-opt">A: Pasta 120g + pollo 150g o manzo 130g + peperoni 100g + olio evo 15g</div>';
+h+='<div class="meal-or">oppure</div>';
+h+='<div class="meal-opt">B: Riso 120g + salmone 150g + parmigiano 20g + olio evo 15g</div>';
+h+='</div></div>';
+h+='<div class="meal-block"><div class="meal-hd">SPUNTINO PRE-SESSIONE \u2014 15% \u00b7 ~498 kcal</div><div class="meal-body">';
+h+='<div class="meal-opt">Pane 50g + miele 20g + frutta secca 20g</div>';
+h+='<div style="font-size:10px;color:var(--org);margin-top:5px">\u26a0 Collagene 15g + vitamina C 45\u201360 min prima \u00b7 pasto almeno 90 min prima</div>';
+h+='</div></div>';
+h+='<div class="meal-block"><div class="meal-hd">CENA POST-BOULDER \u2014 25% \u00b7 ~831 kcal \u2014 entro 60 min</div><div class="meal-body">';
+h+='<div class="meal-opt">Uova 3 o sardine 150g o tacchino 180g + riso 80g + peperoni 100g + olio evo 10g</div>';
+h+='</div></div>';
+h+='</div>';
+h+='<div class="dtype-sec" id="dtype-corsa">';
+h+='<div class="timing-info">Niente pesante 2h pre-corsa. Pasto post entro 45 min dalla fine.</div>';
+h+='<div class="meal-block"><div class="meal-hd">COLAZIONE \u2014 25% \u00b7 ~831 kcal</div><div class="meal-body">';
+h+='<div class="meal-opt">A: Avena 80g + latte 200ml + frutta fresca 150g + semi di zucca 15g</div>';
+h+='<div class="meal-or">oppure</div>';
+h+='<div class="meal-opt">B: Yogurt greco 200g + granola 50g + banana 1</div>';
+h+='</div></div>';
+h+='<div class="meal-block"><div class="meal-hd">PRANZO \u2014 35% \u00b7 ~1163 kcal</div><div class="meal-body">';
+h+='<div class="meal-opt">A: Pasta 120g + tonno 120g o pollo 150g + olio evo 15g</div>';
+h+='<div class="meal-or">oppure</div>';
+h+='<div class="meal-opt">B: Riso 120g + maiale 130g + olio evo 15g</div>';
+h+='</div></div>';
+h+='<div class="meal-block"><div class="meal-hd">SPUNTINO PRE-CORSA \u2014 15% \u00b7 ~498 kcal</div><div class="meal-body">';
+h+='<div class="meal-opt">A: Banana 1 + frutta secca 20g</div>';
+h+='<div class="meal-or">oppure</div>';
+h+='<div class="meal-opt">B: Pane 40g + marmellata 20g</div>';
+h+='</div></div>';
+h+='<div class="meal-block"><div class="meal-hd">CENA POST-CORSA \u2014 25% \u00b7 ~831 kcal \u2014 entro 45 min</div><div class="meal-body">';
+h+='<div class="meal-opt">A: Pollo 180g o salmone 150g o manzo magro 150g + patate 150g + olio evo 10g</div>';
+h+='<div class="meal-or">oppure</div>';
+h+='<div class="meal-opt">B: Uova 3 + pasta 80g + parmigiano 20g</div>';
+h+='</div></div>';
+h+='</div>';
+h+='<div class="dtype-sec" id="dtype-bici">';
+h+='<div class="timing-warn">\u26a0 Orario variabile \u2014 se sessione mattutina la colazione diventa pasto pre-allenamento. Adatta timing di conseguenza.</div>';
+h+='<div class="meal-block"><div class="meal-hd">COLAZIONE \u2014 25% \u00b7 ~831 kcal</div><div class="meal-body">';
+h+='<div class="meal-opt">A: Avena 100g + latte 200ml + banana 1 + noci 30g + miele 15g</div>';
+h+='<div class="meal-or">oppure</div>';
+h+='<div class="meal-opt">B: Uova 3 + pane 80g + ricotta 80g + frutta fresca 150g</div>';
+h+='</div></div>';
+h+='<div class="meal-block"><div class="meal-hd">PRANZO \u2014 35% \u00b7 ~1163 kcal</div><div class="meal-body">';
+h+='<div class="meal-opt">Riso 150g o pasta 150g + manzo 150g o pollo 150g + olio evo 15g</div>';
+h+='</div></div>';
+h+='<div class="meal-block"><div class="meal-hd">DURANTE (&gt;60 min)</div><div class="meal-body">';
+h+='<div class="meal-opt">Banana 1 + frutta secca 30g ogni 45 min</div>';
+h+='</div></div>';
+h+='<div class="meal-block"><div class="meal-hd">CENA POST-BICI \u2014 25% \u00b7 ~831 kcal</div><div class="meal-body">';
+h+='<div class="meal-opt">A: Pasta 130g + salmone 150g o tacchino 180g + olio evo 15g</div>';
+h+='<div class="meal-or">oppure</div>';
+h+='<div class="meal-opt">B: Riso 120g + manzo 150g + ricotta 60g</div>';
+h+='</div></div>';
+h+='</div>';
+h+='<div class="dtype-sec" id="dtype-riposo">';
+h+='<div class="timing-info">Carboidrati ridotti a cena. Privilegia proteine e verdure nel pasto serale.</div>';
+h+='<div class="meal-block"><div class="meal-hd">COLAZIONE \u2014 25% \u00b7 ~831 kcal</div><div class="meal-body">';
+h+='<div class="meal-opt">A: Uova 2 + pane integrale 60g + frutta fresca 150g</div>';
+h+='<div class="meal-or">oppure</div>';
+h+='<div class="meal-opt">B: Yogurt greco 200g + avena 50g + noci 20g</div>';
+h+='</div></div>';
+h+='<div class="meal-block"><div class="meal-hd">PRANZO \u2014 35% \u00b7 ~1163 kcal</div><div class="meal-body">';
+h+='<div class="meal-opt">A: Pasta 100g + sardine 120g o pollo 150g o lenticchie cotte 150g + olio evo 10g</div>';
+h+='<div class="meal-or">oppure</div>';
+h+='<div class="meal-opt">B: Riso 100g + manzo 130g + parmigiano 20g</div>';
+h+='</div></div>';
+h+='<div class="meal-block"><div class="meal-hd">SPUNTINO \u2014 15% \u00b7 ~498 kcal</div><div class="meal-body">';
+h+='<div class="meal-opt">A: Frutta secca 25g + frutta fresca 150g</div>';
+h+='<div class="meal-or">oppure</div>';
+h+='<div class="meal-opt">B: Ricotta 100g + miele 10g</div>';
+h+='</div></div>';
+h+='<div class="meal-block"><div class="meal-hd">CENA \u2014 25% \u00b7 ~831 kcal (carbs ridotti)</div><div class="meal-body">';
+h+='<div class="meal-opt">Pollo 150g o pesce 150g o uova 3 + verdura abbondante + olio evo 10g + pane 40g</div>';
+h+='</div></div>';
+h+='</div>';
+h+='<button class="spesa-btn" onclick="creaListaSpesa()">Crea Lista Spesa</button>';
+h+='<div class="spesa-feedback" id="spesa-feedback"></div>';
+document.getElementById('sec-nutri').innerHTML=h;
+})();
+
+function setDtype(t,el){
+  document.querySelectorAll('.dtype-sec').forEach(function(s){s.classList.remove('on');});
+  document.querySelectorAll('.dtype-btn').forEach(function(b){b.classList.remove('on');});
+  document.getElementById('dtype-'+t).classList.add('on');
+  el.classList.add('on');
+}
+
+function creaListaSpesa(){
+  var lista=['Carne - Pollo','Carne - Manzo','Carne - Tacchino','Carne - Maiale','Pesce - Salmone','Pesce - Tonno','Pesce - Sardine','Latticini - Latte','Latticini - Uova','Latticini - Yogurt greco','Latticini - Parmigiano','Latticini - Ricotta','Frutta - Banana','Frutta - Frutta fresca mista','Frutta secca - Noci','Frutta secca - Frutta secca mista','Frutta secca - Semi di zucca','Verdura - Peperoni','Verdura - Patate','Pasta e Cereali - Pasta','Pasta e Cereali - Riso','Pasta e Cereali - Avena','Pasta e Cereali - Granola','Pane e Panetteria - Pane integrale','Pane e Panetteria - Pane','Dispensa - Miele','Dispensa - Marmellata','Dispensa - Lenticchie','Condimenti - Olio evo','Integratori - Collagene 15g','Integratori - Vitamina C'].join('\n');
+  var fb=document.getElementById('spesa-feedback');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(lista).then(function(){
+      fb.textContent='Lista copiata negli appunti.';
+      setTimeout(function(){window.location.href='x-apple-reminderkit://reminderslist/04CA38AA-64D0-4C60-AA88-6901C0C88E09';},400);
+    }).catch(function(){
+      fb.textContent='Copia non riuscita.';
+      window.location.href='x-apple-reminderkit://reminderslist/04CA38AA-64D0-4C60-AA88-6901C0C88E09';
+    });
+  } else {
+    window.location.href='x-apple-reminderkit://reminderslist/04CA38AA-64D0-4C60-AA88-6901C0C88E09';
+  }
+}
+
+document.getElementById('sec-tendini').innerHTML=`
+  <div class="tend-card">
+    <div class="tend-lbl">▸ PROTOCOLLO PRE-BOULDER</div>
+    <div style="font-size:13px;color:#dedede;font-weight:700;margin-bottom:6px">15g gelatina + Vitamina C — 30 min prima della sessione</div>
+    <div style="font-size:11px;color:#888;line-height:1.8">Stimola sintesi collagene. Massimizza l'effetto sui tendini.<br>
+    <span style="color:#b8880d;font-weight:700">Regola 48–72h:</span> mai due sessioni boulder sotto le 48 ore.</div>
+  </div>
+  <div class="icard">
+    <div class="ilbl">ALIMENTI CHIAVE</div>
+    <div class="ftags">${['Brodo osseo','Gelatina','Salmone','Sardine','Peperoni rossi','Kiwi','Broccoli','Fegato','Semi di zucca','Noci'].map(f=>`<span class="ftag">${f}</span>`).join('')}</div>
+  </div>`;
+
+render();
+</script>
+</body>
+</html>
