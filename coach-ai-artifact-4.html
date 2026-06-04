@@ -559,13 +559,11 @@ function creaListaSpesa(){
   if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(lista).then(function(){
       fb.textContent='Lista copiata negli appunti.';
-      setTimeout(function(){window.location.href='x-apple-reminderkit://reminderslist/04CA38AA-64D0-4C60-AA88-6901C0C88E09';},400);
     }).catch(function(){
-      fb.textContent='Copia non riuscita.';
-      window.location.href='x-apple-reminderkit://reminderslist/04CA38AA-64D0-4C60-AA88-6901C0C88E09';
+      fb.textContent='Copia non riuscita — prova da Safari.';
     });
   } else {
-    window.location.href='x-apple-reminderkit://reminderslist/04CA38AA-64D0-4C60-AA88-6901C0C88E09';
+    fb.textContent='Clipboard non disponibile.';
   }
 }
 
