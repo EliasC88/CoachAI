@@ -99,6 +99,18 @@ body{background:var(--bg0);color:var(--t0);font-family:var(--mono);font-size:12p
 .cal-row input{background:var(--bg0);border:1px solid var(--bd);color:var(--t0);font-family:var(--mono);font-size:11px;padding:4px 7px;border-radius:3px;flex:1}
 .cal-confirm{background:var(--bluebg);border:1px solid var(--bluebd);color:var(--blue);font-family:var(--mono);font-size:10px;font-weight:700;padding:6px 14px;border-radius:3px;cursor:pointer;width:100%;letter-spacing:.06em;transition:all .1s}
 .cal-confirm:hover{background:var(--blue);color:#fff}
+
+.hw-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.hw-hd-lbl{font-size:14px;font-weight:700}
+.hw-hd-dur{font-size:10px;color:var(--t2)}
+.hw-cat{background:var(--bg1);border:1px solid var(--bd);border-radius:var(--r);padding:10px 12px;margin-bottom:8px}
+.hw-cat-lbl{font-size:9px;color:var(--grn);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;font-weight:700}
+.hw-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd2);font-size:11px;color:var(--t1)}
+.hw-row:last-child{border:none}
+.hw-name{flex:1;color:var(--t0)}
+.hw-sets{color:var(--grn);font-weight:700;flex-shrink:0;min-width:46px;text-align:right}
+.hw-equip{color:var(--t2);font-size:10px;flex-shrink:0;min-width:110px;text-align:right}
+.hw-link{color:var(--grn);text-decoration:underline;cursor:pointer;font-size:11px}
 </style>
 </head>
 <body>
@@ -107,6 +119,7 @@ body{background:var(--bg0);color:var(--t0);font-family:var(--mono);font-size:12p
   <div id="phase-pill"></div>
   <div class="tabs">
     <button class="tab-btn on" onclick="setTab('programma',this)">SETTIMANA</button>
+    <button class="tab-btn" id="tab-home" onclick="setTab('home',this)">HOME</button>
     <button class="tab-btn" onclick="setTab('nutri',this)">NUTRI</button>
     <button class="tab-btn" onclick="setTab('tendini',this)">TENDINI</button>
   </div>
@@ -124,6 +137,7 @@ body{background:var(--bg0);color:var(--t0);font-family:var(--mono);font-size:12p
     <div class="ph-strip" id="ph-strip"></div>
     <div id="sessions"></div>
   </div>
+  <div class="sec" id="sec-home"></div>
   <div class="sec" id="sec-nutri"></div>
   <div class="sec" id="sec-tendini"></div>
 </div>
@@ -381,7 +395,8 @@ function render(){
         </div>
         <div class="sess-bd" id="b${id}" style="display:none">
           ${s.desc?`<div>${s.desc}</div>`:''}
-          ${s.ex?`<div class="ex-lbl">ESERCIZI</div><div class="ex-val">${s.ex}</div>`:''}
+          ${s.ex&&s.t!=='home'?`<div class="ex-lbl">ESERCIZI</div><div class="ex-val">${s.ex}</div>`:''}
+          ${s.t==='home'?`<div class="hw-link" onclick="event.stopPropagation();jumpHome()">▸ Vedi scheda Home Workout completa</div>`:''}
           ${s.w?`<div class="warn">⚠ ${s.w}</div>`:''}
           <div class="cal-panel" id="cp${id}" style="display:none">
             <div class="cal-panel-lbl">&#128197; Aggiungi al calendario</div>
@@ -430,6 +445,7 @@ function createICS(id){
   URL.revokeObjectURL(url);
 }
 function chWk(d){if(cw+d>=1&&cw+d<=19){cw+=d;render();}}
+function jumpHome(){setTab('home',document.getElementById('tab-home'));window.scrollTo(0,0);}
 function setTab(t,el){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('on'));
@@ -566,6 +582,45 @@ function creaListaSpesa(){
     fb.textContent='Clipboard non disponibile.';
   }
 }
+
+(function(){
+  function parse(str){
+    return str.split(' · ').map(function(item){
+      var parts=item.split(' → ');
+      var left=parts[0].trim();
+      var equip=(parts[1]||'').trim();
+      var m=left.match(/^(.+?)\s(\S*×\S+)$/);
+      return {name:m?m[1]:left, sets:m?m[2]:'', equip:equip};
+    });
+  }
+  function cat(name){
+    var n=name.toLowerCase();
+    if(/pull|hang|chin/.test(n))return 'TRAZIONE';
+    if(/band/.test(n))return 'SPALLA · POLSO (STABILITÀ)';
+    if(/push/.test(n))return 'SPINTA';
+    if(/plank|hollow/.test(n))return 'CORE';
+    return 'ALTRO';
+  }
+  var order=['TRAZIONE','SPALLA · POLSO (STABILITÀ)','SPINTA','CORE','ALTRO'];
+  var exs=parse(H0);
+  var groups={};
+  exs.forEach(function(e){var c=cat(e.name);(groups[c]=groups[c]||[]).push(e);});
+  var h='';
+  h+='<div class="hw-hd"><div class="hw-hd-lbl">HOME WORKOUT</div><div class="hw-hd-dur">~20min</div></div>';
+  h+='<div class="icard" style="margin-bottom:11px">';
+  h+='<div class="ilbl">QUANDO</div>';
+  h+='Giorno HOME della settimana. Lavoro accessorio — solo nei giorni di allenamento attivo, mai nei giorni di riposo.';
+  h+='</div>';
+  order.forEach(function(c){
+    if(!groups[c])return;
+    h+='<div class="hw-cat"><div class="hw-cat-lbl">'+c+'</div>';
+    groups[c].forEach(function(e){
+      h+='<div class="hw-row"><span class="hw-name">'+e.name+'</span><span class="hw-sets">'+e.sets+'</span><span class="hw-equip">'+e.equip+'</span></div>';
+    });
+    h+='</div>';
+  });
+  document.getElementById('sec-home').innerHTML=h;
+})();
 
 document.getElementById('sec-tendini').innerHTML=`
   <div class="tend-card">
