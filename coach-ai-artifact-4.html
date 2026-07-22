@@ -142,7 +142,7 @@ body{background:var(--bg0);color:var(--t0);font-family:var(--mono);font-size:12p
   <div class="sec" id="sec-tendini"></div>
 </div>
 <script>
-const H0='Scapular pull 3×10 → barra · Negative chin-up 3×5 → barra · Band external rotation 3×15 → elastico libero · Band reverse wrist curl 3×15 → elastico libero · Band lateral raise 3×12 → elastico libero (piedi sull\'elastico) · Push-up largo 3×12 → bodyweight (petto) · Push-up stretto 3×8 → bodyweight (petto interno + tricipite) · Plank 3×45" → bodyweight';
+const H0='Scapular Pull 3×10 → barra · Negative Chin-up 3×5 → barra · Band External Rotation 3×15 → elastico libero · Band Reverse Wrist Curl 3×15 → elastico libero · Band Lateral Raise 3×12 → elastico libero (piedi sull\'elastico) · Push-up Largo 3×12 → bodyweight · Push-up Stretto 3×8 → bodyweight · Crunch 3×15-20 → bodyweight · Band Bicep Curl 3×12 → elastico libero · Band Hammer Curl 3×12 → elastico libero';
 const A1='Push-up 3×10 · Face pull 3×15 · Reverse wrist curl 3×15 · Plank 3×45"';
 const A2=A1+' · Dead hang 3×10"';
 const A3=A2+' · Negative pull-up 3×4 (4–5" discesa)';
@@ -595,13 +595,14 @@ function creaListaSpesa(){
   }
   function cat(name){
     var n=name.toLowerCase();
+    if(/bicep|hammer/.test(n))return 'BRACCIA';
     if(/pull|hang|chin/.test(n))return 'TRAZIONE';
     if(/band/.test(n))return 'SPALLA · POLSO (STABILITÀ)';
     if(/push/.test(n))return 'SPINTA';
-    if(/plank|hollow/.test(n))return 'CORE';
+    if(/plank|hollow|crunch/.test(n))return 'CORE';
     return 'ALTRO';
   }
-  var order=['TRAZIONE','SPALLA · POLSO (STABILITÀ)','SPINTA','CORE','ALTRO'];
+  var order=['TRAZIONE','SPALLA · POLSO (STABILITÀ)','BRACCIA','SPINTA','CORE','ALTRO'];
   var exs=parse(H0);
   var groups={};
   exs.forEach(function(e){var c=cat(e.name);(groups[c]=groups[c]||[]).push(e);});
